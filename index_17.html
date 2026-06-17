@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学食メニュー</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --border: #e4e2da;
+      --text: #1c1c1a;
+      --muted: #7a7870;
+      --a1: #1a5fb4;
+      --a1-bg: #ddeeff;
+      --a2: #813d9c;
+      --a2-bg: #f0e0ff;
+      --b1: #2e7d32;
+      --b1-bg: #d8f5da;
+      --b2: #c0392b;
+      --b2-bg: #fde8e6;
+      --b3: #7a5c00;
+      --b3-bg: #fff3cc;
+      --ink: #1c1c1a;
+      --accent: #e8640c;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--ink);
+      color: #fff;
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .header-logo span { color: var(--accent); }
+    .header-sub { font-size: 12px; color: #aaa; letter-spacing: 0.04em; }
+
+    /* ===== TABS ===== */
+    .tab-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      gap: 0;
+    }
+    .tab {
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+
+    /* ===== PAGES ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ===== WEEK NAVIGATION ===== */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .week-label { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .week-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .week-nav-btns { display: flex; gap: 8px; }
+    .week-nav-btns button {
+      padding: 7px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background 0.12s;
+    }
+    .week-nav-btns button:hover { background: var(--bg); }
+
+    /* ===== 閲覧ページ：曜日行 × 定食カード横並び ===== */
+
+    /* 曜日ごとの行ブロック */
+    .day-row {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* 左端の曜日ラベル */
+    .day-label {
+      flex: 0 0 64px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+    }
+    .day-label .day-name { font-size: 14px; font-weight: 800; }
+    .day-label .day-date { font-size: 11px; color: #bbb; margin-top: 3px; }
+
+    /* 定食カードを横に並べるエリア */
+    .day-cards {
+      display: flex;
+      flex: 1;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    /* 各定食カード */
+    .menu-card {
+      flex: 1 1 0;
+      min-width: 130px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* カード上部のラベル帯 */
+    .menu-card-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding: 5px 0;
+    }
+    .card-label-a1 { background: var(--a1-bg); color: var(--a1); }
+    .card-label-a2 { background: var(--a2-bg); color: var(--a2); }
+    .card-label-b1 { background: var(--b1-bg); color: var(--b1); }
+    .card-label-b2 { background: var(--b2-bg); color: var(--b2); }
+    .card-label-b3 { background: var(--b3-bg); color: var(--b3); }
+
+    /* カード内の写真 */
+    .menu-thumb {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
+      display: block;
+    }
+    .menu-thumb-placeholder {
+      width: 100%;
+      height: 90px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #ddd;
+    }
+
+    /* カード内のテキスト */
+    .menu-card-body {
+      padding: 8px 10px 10px;
+      flex: 1;
+    }
+    .menu-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+    .menu-price {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* iPadランドスケープ最適化 */
+    @media (min-width: 900px) {
+      #view-page .container { max-width: 100%; padding: 16px 24px; }
+      .menu-thumb, .menu-thumb-placeholder { height: 100px; }
+      .day-label { flex: 0 0 72px; }
+    }
+    @media (max-width: 600px) {
+      .day-label { flex: 0 0 52px; }
+      .day-label .day-name { font-size: 12px; }
+      .menu-thumb, .menu-thumb-placeholder { height: 70px; }
+      .menu-name { font-size: 12px; }
+    }
+
+    /* ===== ADMIN ===== */
+    .admin-notice {
+      font-size: 13px;
+      background: #fffbe6;
+      border: 1px solid #f0d060;
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 22px;
+      color: #555;
+    }
+
+    /* Excel Import */
+    .import-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+    .import-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .import-box p { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+    .import-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .import-row input[type="file"] { font-size: 13px; }
+    .btn { padding: 8px 20px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: background 0.13s; }
+    .btn-dark { background: var(--ink); color: #fff; }
+    .btn-dark:hover { background: #333; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: #c85200; }
+
+    .csv-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: monospace;
+      line-height: 1.7;
+    }
+
+    /* Admin table */
+    .admin-day-section { margin-bottom: 24px; }
+    .admin-day-title {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 14px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-day-title .day-date-badge {
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 400;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
+    }
+    .admin-table th {
+      background: #f0efeb;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .admin-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0efeb;
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+
+    .admin-table input[type="text"],
+    .admin-table input[type="number"] {
+      font-size: 13px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      transition: border-color 0.13s;
+    }
+    .admin-table input:focus { outline: none; border-color: var(--accent); background: #fff; }
+    .admin-table input[type="number"] { width: 90px; }
+
+    /* Photo upload cell */
+    .photo-upload-cell { display: flex; align-items: center; gap: 8px; }
+    .photo-thumb-admin {
+      width: 48px; height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: block;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 48px;
+      text-align: center;
+    }
+    .photo-upload-label {
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .photo-upload-input { display: none; }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .badge-a1 { background: var(--a1-bg); color: var(--a1); }
+    .badge-a2 { background: var(--a2-bg); color: var(--a2); }
+    .badge-b1 { background: var(--b1-bg); color: var(--b1); }
+    .badge-b2 { background: var(--b2-bg); color: var(--b2); }
+    .badge-b3 { background: var(--b3-bg); color: var(--b3); }
+
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== アコーディオン ===== */
+    .accordion {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .accordion-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: left;
+    }
+    .accordion-btn:hover { background: var(--bg); }
+    .accordion-arrow {
+      font-size: 22px;
+      color: var(--muted);
+      transition: transform 0.2s;
+      display: inline-block;
+      line-height: 1;
+    }
+    .accordion-arrow.open { transform: rotate(90deg); }
+    .accordion-body {
+      display: none;
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .accordion-body.open { display: block; }
+
+    /* メニュー概要リスト（アコーディオン内） */
+    .weekly-summary { margin-bottom: 14px; }
+    .weekly-summary-day {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .weekly-summary-day:last-child { border-bottom: none; }
+    .summary-day-label {
+      font-weight: 700;
+      min-width: 40px;
+      color: var(--ink);
+    }
+    .summary-items { display: flex; flex-wrap: wrap; gap: 6px; }
+    .summary-item {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--muted);
+      background: var(--bg);
+    }
+
+    /* ===== 固定メニュー ===== */
+    .fixed-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .fixed-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      width: 160px;
+      flex-shrink: 0;
+    }
+    .fixed-card-body { padding: 10px 12px; }
+    .fixed-card-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .fixed-card-desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    /* ===== PASSWORD MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 36px 32px 28px;
+      width: 340px;
+      max-width: 90vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    .modal-icon { font-size: 36px; margin-bottom: 12px; }
+    .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+
+    .pw-input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .pw-input-wrap input[type="password"],
+    .pw-input-wrap input[type="text"] {
+      width: 100%;
+      padding: 12px 44px 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      background: var(--bg);
+      color: var(--ink);
+      transition: border-color 0.13s;
+      letter-spacing: 0.1em;
+    }
+    .pw-input-wrap input:focus { outline: none; border-color: var(--accent); background: #fff; }
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--muted);
+      padding: 4px;
+    }
+
+    .pw-error {
+      font-size: 12px;
+      color: #c0392b;
+      background: #fde8e6;
+      border-radius: 6px;
+      padding: 7px 12px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .pw-error.show { display: block; }
+
+    .modal-btn-row { display: flex; gap: 8px; }
+    .modal-btn-row .btn { flex: 1; padding: 11px; font-size: 14px; border-radius: 8px; }
+
+    /* パスワード変更セクション */
+    .pw-change-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+    .pw-change-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .pw-change-section p { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .pw-change-grid { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+    .pw-change-grid label { font-size: 12px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; }
+    .pw-change-grid .pw-input-wrap { margin-bottom: 0; }
+    .pw-strength {
+      font-size: 11px;
+      margin-top: 4px;
+      height: 14px;
+    }
+    .pw-logout-row {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pw-logout-row span { font-size: 12px; color: var(--muted); }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+
+    /* ===== DATE EDITOR ===== */
+    .date-editor {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .date-editor label { font-size: 13px; font-weight: 600; }
+    .date-editor input[type="date"] {
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      background: var(--bg);
+    }
+    .date-editor input[type="date"]:focus { outline: none; border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ===== パスワードモーダル ===== -->
+<div class="modal-overlay hidden" id="pw-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">管理者ログイン</div>
+    <div class="modal-sub">管理画面にアクセスするにはパスワードが必要です</div>
+    <div class="pw-input-wrap">
+      <input type="password" id="pw-input" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')checkPassword()">
+      <button class="pw-toggle" onclick="togglePwVisibility('pw-input', this)">👁</button>
+    </div>
+    <div class="pw-error" id="pw-error">パスワードが違います。もう一度お試しください。</div>
+    <div class="modal-btn-row">
+      <button class="btn btn-outline" onclick="closePwModal()">キャンセル</button>
+      <button class="btn btn-dark" onclick="checkPassword()">ログイン</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="header-left">
+    <div>
+      <div class="header-logo">🍱 学<span>食</span>メニュー</div>
+    </div>
+  </div>
+  <div class="header-sub" id="header-week-label"></div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('view')">📅 今週のA・B定食</button>
+  <button class="tab" onclick="switchTab('fixed')">📋 固定メニュー</button>
+  <button class="tab" onclick="switchTab('admin')">⚙️ 管理・更新</button>
+</div>
+
+<!-- ===== 閲覧ページ ===== -->
+<div id="view-page" class="page active">
+  <div class="container">
+    <div id="menu-grid"></div>
+  </div>
+</div>
+
+<!-- ===== 固定メニューページ ===== -->
+<div id="fixed-page" class="page">
+  <div class="container">
+    <div id="fixed-grid"></div>
+  </div>
+</div>
+
+<!-- ===== 管理ページ ===== -->
+<div id="admin-page" class="page">
+  <div class="container">
+
+    <!-- アコーディオン：今週のA・B定食 -->
+    <div class="accordion">
+      <button class="accordion-btn" onclick="toggleAccordion('acc-weekly')">
+        <span>📅 今週のA・B定食</span>
+        <span class="accordion-arrow" id="arrow-acc-weekly">›</span>
+      </button>
+      <div class="accordion-body" id="acc-weekly">
+        <div class="admin-notice">Excelファイル（CSV）を読み込むか、手動で編集して「保存する」を押してください。</div>
+        <div class="import-box">
+          <h3>📊 ExcelファイルからCSVで一括更新</h3>
+          <p>ExcelでCSVを作成するには：<strong>「名前を付けて保存」→「CSV UTF-8 (コンマ区切り)」</strong>を選択してください。</p>
+          <div class="import-row">
+            <input type="file" id="csv-file" accept=".csv">
+            <button class="btn btn-accent" onclick="importCSV()">📥 読み込む</button>
+            <button class="btn btn-outline" onclick="downloadTemplate()">📤 テンプレートDL</button>
+          </div>
+          <div class="csv-hint">
+            CSVの形式（1行目ヘッダー、2行目から月〜金の5行）：<br>
+            曜日, A1料理名, A1値段, A2料理名, A2値段, B1料理名, B1値段, B2料理名, B2値段, B3料理名, B3値段
+          </div>
+        </div>
+        <div id="admin-days"></div>
+        <div class="admin-actions">
+          <button class="btn btn-dark" onclick="saveAll()">✅ 保存する</button>
+          <button class="btn btn-outline" onclick="resetToDefault()">↩️ 初期データに戻す</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- アコーディオン：固定メニュー -->
+    <div class="accordion">
+      <button class="accordion-btn" onclick="toggleAccordion('acc-fixed')">
+        <span>📋 固定メニュー</span>
+        <span class="accordion-arrow" id="arrow-acc-fixed">›</span>
+      </button>
+      <div class="accordion-body" id="acc-fixed">
+        <div id="fixed-admin-list"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn btn-outline" onclick="addFixedItem()">＋ 項目を追加</button>
+          <button class="btn btn-dark" onclick="saveFixedItems()">✅ 固定メニューを保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- アコーディオン：パスワード・設定 -->
+    <div class="accordion">
+      <button class="accordion-btn" onclick="toggleAccordion('acc-settings')">
+        <span>🔑 パスワード・設定</span>
+        <span class="accordion-arrow" id="arrow-acc-settings">›</span>
+      </button>
+      <div class="accordion-body" id="acc-settings">
+        <div class="pw-change-section" style="border:none;padding:0;margin:0;">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">現在のパスワードを確認してから、新しいパスワードに変更できます。</p>
+          <div class="pw-change-grid">
+            <div>
+              <label>現在のパスワード</label>
+              <div class="pw-input-wrap">
+                <input type="password" id="pw-current" placeholder="現在のパスワード">
+                <button class="pw-toggle" onclick="togglePwVisibility('pw-current', this)">👁</button>
+              </div>
+            </div>
+            <div>
+              <label>新しいパスワード</label>
+              <div class="pw-input-wrap">
+                <input type="password" id="pw-new" placeholder="8文字以上推奨" oninput="checkPwStrength()">
+                <button class="pw-toggle" onclick="togglePwVisibility('pw-new', this)">👁</button>
+              </div>
+              <div class="pw-strength" id="pw-strength"></div>
+            </div>
+            <div>
+              <label>新しいパスワード（確認）</label>
+              <div class="pw-input-wrap">
+                <input type="password" id="pw-confirm" placeholder="もう一度入力">
+                <button class="pw-toggle" onclick="togglePwVisibility('pw-confirm', this)">👁</button>
+              </div>
+            </div>
+            <button class="btn btn-accent" onclick="changePassword()" style="margin-top:4px">🔑 パスワードを変更する</button>
+          </div>
+          <div class="pw-logout-row">
+            <span>ブラウザを閉じると自動でログアウトされます</span>
+            <button class="btn btn-outline" onclick="logout()" style="font-size:12px;padding:6px 14px">ログアウト</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// パスワード認証
+// ============================================================
+const DEFAULT_PW_HASH = ''; // 初回は必ずinputとDEFAULT_PWを直接比較する
+const DEFAULT_PW = 'admin1234';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function loadPwHash() {
+  return localStorage.getItem('cafeteria_pw_hash') || null;
+}
+
+function savePwHash(hash) {
+  localStorage.setItem('cafeteria_pw_hash', hash);
+}
+
+// セッション中のログイン状態（ページを閉じるとリセット）
+let isAuthenticated = false;
+
+function switchTab(name) {
+  if (name === 'admin' && !isAuthenticated) {
+    openPwModal();
+    return;
+  }
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['view','fixed','admin'][i] === name);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(name+'-page').classList.add('active');
+  if (name === 'fixed') renderFixed();
+}
+
+function openPwModal() {
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').classList.remove('show');
+  document.getElementById('pw-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('pw-input').focus(), 50);
+}
+
+function closePwModal() {
+  document.getElementById('pw-modal').classList.add('hidden');
+}
+
+async function checkPassword() {
+  const input = document.getElementById('pw-input').value;
+  const savedHash = loadPwHash();
+  let ok = false;
+  if (savedHash) {
+    const hash = await sha256(input);
+    ok = (hash === savedHash);
+  } else {
+    ok = (input === DEFAULT_PW);
+  }
+  if (ok) {
+    isAuthenticated = true;
+    closePwModal();
+    // タブを管理画面に切り替え
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', i === 1);
+    });
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('admin-page').classList.add('active');
+    renderAdmin();
+  } else {
+    document.getElementById('pw-error').classList.add('show');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+async function changePassword() {
+  const current = document.getElementById('pw-current').value;
+  const newPw   = document.getElementById('pw-new').value;
+  const confirm = document.getElementById('pw-confirm').value;
+
+  if (!current || !newPw || !confirm) {
+    showToast('⚠️ すべての欄を入力してください'); return;
+  }
+  const savedHash = loadPwHash();
+  let currentOk = false;
+  if (savedHash) {
+    currentOk = (await sha256(current) === savedHash);
+  } else {
+    currentOk = (current === DEFAULT_PW);
+  }
+  if (!currentOk) {
+    showToast('⚠️ 現在のパスワードが違います'); return;
+  }
+  if (newPw !== confirm) {
+    showToast('⚠️ 新しいパスワードが一致しません'); return;
+  }
+  if (newPw.length < 4) {
+    showToast('⚠️ パスワードは4文字以上にしてください'); return;
+  }
+  const newHash = await sha256(newPw);
+  savePwHash(newHash);
+  document.getElementById('pw-current').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-confirm').value = '';
+  document.getElementById('pw-strength').textContent = '';
+  showToast('✅ パスワードを変更しました');
+}
+
+function logout() {
+  if (!confirm('ログアウトしますか？')) return;
+  isAuthenticated = false;
+  // 閲覧タブに戻す
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('view-page').classList.add('active');
+  showToast('🔒 ログアウトしました');
+}
+
+function togglePwVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function checkPwStrength() {
+  const pw = document.getElementById('pw-new').value;
+  const el = document.getElementById('pw-strength');
+  if (!pw) { el.textContent = ''; return; }
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  const levels = [
+    { label: '弱い', color: '#c0392b' },
+    { label: '普通', color: '#e67e22' },
+    { label: 'まあまあ', color: '#f1c40f' },
+    { label: '強い', color: '#27ae60' },
+    { label: 'とても強い', color: '#1a7a30' },
+  ];
+  const lv = levels[Math.min(score, 4)];
+  el.textContent = `強度：${lv.label}`;
+  el.style.color = lv.color;
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('pw-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePwModal();
+});
+
+// ============================================================
+// 定数
+// ============================================================
+const DAYS = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+const DAYS_SHORT = ['日','月','火','水','木','金','土'];
+const SLOTS = [
+  { key: 'a1', label: 'A定食①', badgeClass: 'badge-a1', labelClass: 'label-a1' },
+  { key: 'a2', label: 'A定食②', badgeClass: 'badge-a2', labelClass: 'label-a2' },
+  { key: 'b1', label: 'B定食①', badgeClass: 'badge-b1', labelClass: 'label-b1' },
+  { key: 'b2', label: 'B定食②', badgeClass: 'badge-b2', labelClass: 'label-b2' },
+  { key: 'b3', label: 'B定食③', badgeClass: 'badge-b3', labelClass: 'label-b3' },
+];
+
+// ============================================================
+// デフォルトメニュー
+// ============================================================
+const DEFAULT_MENU = [
+  { a1:{name:'唐揚げ定食',price:450,photo:''}, a2:{name:'鮭塩焼き定食',price:430,photo:''}, b1:{name:'野菜炒め定食',price:400,photo:''}, b2:{name:'麻婆豆腐定食',price:420,photo:''}, b3:{name:'カレーライス',price:380,photo:''} },
+  { a1:{name:'豚生姜焼き定食',price:480,photo:''}, a2:{name:'チキンソテー定食',price:460,photo:''}, b1:{name:'親子丼',price:410,photo:''}, b2:{name:'うどん定食',price:380,photo:''}, b3:{name:'五目炒飯',price:390,photo:''} },
+  { a1:{name:'ハンバーグ定食',price:500,photo:''}, a2:{name:'さばみそ定食',price:450,photo:''}, b1:{name:'冷やし中華',price:400,photo:''}, b2:{name:'天丼',price:440,photo:''}, b3:{name:'豆腐チゲ定食',price:420,photo:''} },
+  { a1:{name:'エビフライ定食',price:490,photo:''}, a2:{name:'ミートソースパスタ',price:460,photo:''}, b1:{name:'卵とじ丼',price:380,photo:''}, b2:{name:'ラーメン定食',price:430,photo:''}, b3:{name:'キムチ炒め定食',price:410,photo:''} },
+  { a1:{name:'カツカレー',price:520,photo:''}, a2:{name:'ビビンバ',price:470,photo:''}, b1:{name:'月見そば',price:360,photo:''}, b2:{name:'鶏つくね定食',price:420,photo:''}, b3:{name:'回鍋肉定食',price:400,photo:''} },
+];
+
+// ============================================================
+// 週の開始日
+// ============================================================
+function getTodayJST() {
+  // 日本時間で今日の年月日を取得
+  const jstStr = new Date().toLocaleDateString('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+  const parts = jstStr.split('/');
+  return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+}
+
+function getThisMonday() {
+  const today = getTodayJST();
+  const day = today.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() + diff);
+}
+
+function formatDate(d) {
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function formatDateInput(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function loadWeekStart() {
+  const saved = localStorage.getItem('cafeteria_week_start');
+  if (saved) {
+    // YYYY-MM-DD形式はそのままローカル時間として解釈
+    const [y, m, d] = saved.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return getThisMonday();
+}
+
+function saveWeekStart(d) {
+  // UTC変換せずローカル日付文字列で保存（タイムゾーンずれ防止）
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  localStorage.setItem('cafeteria_week_start', `${y}-${m}-${dd}`);
+}
+
+function getWeekDates() {
+  const today = getTodayJST();
+  const dow = today.getDay(); // 0=日, 6=土
+  // 土日は次の月曜起点、平日は今日起点
+  let start;
+  if (dow === 0) {
+    // 日曜 → 翌日（月曜）
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  } else if (dow === 6) {
+    // 土曜 → 翌々日（月曜）
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2);
+  } else {
+    // 平日 → 今日
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  }
+  return Array.from({length:5}, (_,i) => {
+    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+  });
+}
+
+function setThisWeek() {
+  // localStorageの古いデータを一旦削除してから再設定
+  localStorage.removeItem('cafeteria_week_start');
+  const mon = getThisMonday();
+  saveWeekStart(mon);
+  document.getElementById('week-start-input').value = formatDateInput(mon);
+  updateHeaderLabel();
+  renderView();
+  renderAdmin();
+  showToast('📅 今週（' + formatDate(mon) + '〜）に設定しました');
+}
+
+function updateWeekDates() {
+  const val = document.getElementById('week-start-input').value;
+  if (!val) return;
+  const d = new Date(val + 'T00:00:00');
+  saveWeekStart(d);
+  renderView();
+  renderAdmin();
+  updateHeaderLabel();
+}
+
+function updateHeaderLabel() {
+  const dates = getWeekDates();
+  const d0 = dates[0], d4 = dates[4];
+  const label = `${formatDate(d0)}（${DAYS_SHORT[d0.getDay()]}）〜${formatDate(d4)}（${DAYS_SHORT[d4.getDay()]}）`;
+  document.getElementById('header-week-label').textContent = label;
+}
+
+// ============================================================
+// データ保存・読み込み
+// ============================================================
+function loadMenu() {
+  const saved = localStorage.getItem('cafeteria_menu_v2');
+  return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_MENU));
+}
+
+function saveMenu(data) {
+  localStorage.setItem('cafeteria_menu_v2', JSON.stringify(data));
+}
+
+// ============================================================
+// 閲覧ページ
+// ============================================================
+function renderView() {
+  const data = loadMenu();
+  const dates = getWeekDates();
+  const grid = document.getElementById('menu-grid');
+
+  // カードラベルのクラスマップ
+  const labelClassMap = {
+    a1: 'card-label-a1', a2: 'card-label-a2',
+    b1: 'card-label-b1', b2: 'card-label-b2', b3: 'card-label-b3'
+  };
+
+  grid.innerHTML = data.map((day, i) => {
+    const dateStr = formatDate(dates[i]);
+
+    const cards = SLOTS.map(slot => {
+      const item = day[slot.key] || { name: '', price: 0, photo: '' };
+      const thumb = item.photo
+        ? `<img class="menu-thumb" src="${item.photo}" alt="${item.name}">`
+        : `<div class="menu-thumb-placeholder">🍽️</div>`;
+      return `
+        <div class="menu-card">
+          <div class="menu-card-label ${labelClassMap[slot.key]}">${slot.label}</div>
+          ${thumb}
+          <div class="menu-card-body">
+            <div class="menu-name">${item.name || '—'}</div>
+            <div class="menu-price">${item.price ? '¥' + item.price : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const dayName = DAYS_SHORT[dates[i].getDay()];
+    return `
+      <div class="day-row">
+        <div class="day-label">
+          <div class="day-name">${dayName}</div>
+          <div class="day-date">${dateStr}</div>
+        </div>
+        <div class="day-cards">${cards}</div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// 管理ページ
+// ============================================================
+function renderAdmin() {
+  const data = loadMenu();
+  const dates = getWeekDates();
+  const container = document.getElementById('admin-days');
+  container.innerHTML = data.map((day, i) => {
+    const dateStr = formatDate(dates[i]);
+    const rows = SLOTS.map(slot => {
+      const item = day[slot.key] || {name:'', price:0, photo:''};
+      const thumb = item.photo
+        ? `<img class="photo-thumb-admin" id="thumb-${i}-${slot.key}" src="${item.photo}" alt="" onclick="document.getElementById('photo-input-${i}-${slot.key}').click()">`
+        : `<div class="photo-thumb-admin" id="thumb-${i}-${slot.key}" onclick="document.getElementById('photo-input-${i}-${slot.key}').click()">📷</div>`;
+      return `
+        <tr>
+          <td><span class="badge ${slot.badgeClass}">${slot.label}</span></td>
+          <td><input type="text" id="name-${i}-${slot.key}" value="${item.name}" placeholder="料理名を入力"></td>
+          <td><input type="number" id="price-${i}-${slot.key}" value="${item.price||''}" min="0" placeholder="円"></td>
+          <td>
+            <div class="photo-upload-cell">
+              ${thumb}
+              <div>
+                <label class="photo-upload-label" for="photo-input-${i}-${slot.key}">写真を変更</label>
+                <input type="file" class="photo-upload-input" id="photo-input-${i}-${slot.key}"
+                  accept="image/*" onchange="handlePhotoUpload(this, ${i}, '${slot.key}')">
+                ${item.photo ? `<br><span class="photo-upload-label" style="color:#c00" onclick="clearPhoto(${i},'${slot.key}')">削除</span>` : ''}
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div class="admin-day-section">
+        <div class="admin-day-title">
+          ${DAYS_SHORT[dates[i].getDay()]}曜日 <span class="day-date-badge">${dateStr}</span>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width:90px">定食</th>
+              <th>料理名</th>
+              <th style="width:100px">値段（円）</th>
+              <th style="width:160px">写真</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  // 固定メニュー編集セクションをadmin-daysの後ろに追加
+  renderFixedAdmin();
+}
+
+// ============================================================
+// 写真アップロード
+// ============================================================
+function handlePhotoUpload(input, dayIndex, slotKey) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = loadMenu();
+    data[dayIndex][slotKey].photo = e.target.result;
+    saveMenu(data);
+    renderAdmin();
+    renderView();
+    showToast('📷 写真を保存しました');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto(dayIndex, slotKey) {
+  const data = loadMenu();
+  data[dayIndex][slotKey].photo = '';
+  saveMenu(data);
+  renderAdmin();
+  renderView();
+}
+
+// ============================================================
+// 管理画面の保存
+// ============================================================
+function saveAll() {
+  const data = Array.from({length:5}, (_, i) => {
+    const dayData = {};
+    SLOTS.forEach(slot => {
+      const nameEl = document.getElementById(`name-${i}-${slot.key}`);
+      const priceEl = document.getElementById(`price-${i}-${slot.key}`);
+      const existing = loadMenu()[i][slot.key] || {};
+      dayData[slot.key] = {
+        name: nameEl ? nameEl.value : '',
+        price: priceEl ? (parseInt(priceEl.value)||0) : 0,
+        photo: existing.photo || ''
+      };
+    });
+    return dayData;
+  });
+  saveMenu(data);
+  renderView();
+  showToast('💾 保存しました！');
+}
+
+function resetToDefault() {
+  if (!confirm('初期データに戻しますか？現在の内容は消えます。')) return;
+  saveMenu(JSON.parse(JSON.stringify(DEFAULT_MENU)));
+  renderAdmin();
+  renderView();
+  showToast('↩️ 初期データに戻しました');
+}
+
+// ============================================================
+// CSV インポート（Excel連携）
+// ============================================================
+// CSVフォーマット（1行目ヘッダー）:
+// 曜日, A1料理名, A1値段, A2料理名, A2値段, B1料理名, B1値段, B2料理名, B2値段, B3料理名, B3値段
+
+function importCSV() {
+  const fileInput = document.getElementById('csv-file');
+  const file = fileInput.files[0];
+  if (!file) { showToast('⚠️ ファイルを選択してください'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      // 1行目はヘッダーなのでスキップ
+      const dataLines = lines[0].includes('曜日') || lines[0].includes('A1') ? lines.slice(1) : lines;
+
+      if (dataLines.length < 5) {
+        showToast('⚠️ データが5行（月〜金）分ありません');
+        return;
+      }
+
+      const current = loadMenu();
+      const keys = ['a1','a2','b1','b2','b3'];
+
+      const newMenu = dataLines.slice(0,5).map((line, i) => {
+        // CSVのセルをパース（ダブルクオート対応）
+        const cells = parseCSVLine(line);
+        // cells[0]=曜日, cells[1]=A1名, cells[2]=A1値段, cells[3]=A2名...
+        const dayData = {};
+        keys.forEach((k, ki) => {
+          const nameIdx = ki * 2 + 1;
+          const priceIdx = ki * 2 + 2;
+          dayData[k] = {
+            name: cells[nameIdx] ? cells[nameIdx].trim() : '',
+            price: cells[priceIdx] ? parseInt(cells[priceIdx].replace(/[^\d]/g,''))||0 : 0,
+            photo: (current[i] && current[i][k]) ? (current[i][k].photo || '') : ''
+          };
+        });
+        return dayData;
+      });
+
+      saveMenu(newMenu);
+      renderAdmin();
+      renderView();
+      showToast('✅ CSVを読み込みました！');
+      fileInput.value = '';
+    } catch(err) {
+      showToast('⚠️ CSVの読み込みに失敗しました: ' + err.message);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ============================================================
+// テンプレートCSVダウンロード
+// ============================================================
+function downloadTemplate() {
+  const header = '曜日,A1料理名,A1値段(円),A2料理名,A2値段(円),B1料理名,B1値段(円),B2料理名,B2値段(円),B3料理名,B3値段(円)';
+  const rows = [
+    '月曜日,唐揚げ定食,450,鮭塩焼き定食,430,野菜炒め定食,400,麻婆豆腐定食,420,カレーライス,380',
+    '火曜日,豚生姜焼き定食,480,チキンソテー定食,460,親子丼,410,うどん定食,380,五目炒飯,390',
+    '水曜日,ハンバーグ定食,500,さばみそ定食,450,冷やし中華,400,天丼,440,豆腐チゲ定食,420',
+    '木曜日,エビフライ定食,490,ミートソースパスタ,460,卵とじ丼,380,ラーメン定食,430,キムチ炒め定食,410',
+    '金曜日,カツカレー,520,ビビンバ,470,月見そば,360,鶏つくね定食,420,回鍋肉定食,400',
+  ];
+  const csv = '\uFEFF' + [header, ...rows].join('\n'); // BOM付きUTF-8
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '学食メニューテンプレート.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 テンプレートをダウンロードしました');
+}
+
+// ============================================================
+// アコーディオン
+// ============================================================
+function toggleAccordion(id) {
+  const body  = document.getElementById(id);
+  const arrow = document.getElementById('arrow-' + id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  // 今週のA・B定食を開いたときにrenderAdminを実行
+  if (!isOpen && id === 'acc-weekly') renderAdmin();
+  if (!isOpen && id === 'acc-fixed')  renderFixedAdmin();
+}
+
+// ============================================================
+// 固定メニュー
+// ============================================================
+const DEFAULT_FIXED = [
+  { name: 'ご飯・味噌汁セット', price: 150, photo: '', desc: '白米・味噌汁のセット' },
+  { name: 'うどん',             price: 300, photo: '', desc: '温・冷 選べます' },
+  { name: 'そば',               price: 300, photo: '', desc: '温・冷 選べます' },
+  { name: 'パン（各種）',       price: 120, photo: '', desc: '毎日数種類ご用意' },
+];
+
+function loadFixed() {
+  const saved = localStorage.getItem('cafeteria_fixed');
+  return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_FIXED));
+}
+function saveFixed(data) {
+  localStorage.setItem('cafeteria_fixed', JSON.stringify(data));
+}
+
+// 閲覧ページの固定メニュー表示
+function renderFixed() {
+  const data = loadFixed();
+  const grid = document.getElementById('fixed-grid');
+  if (!grid) return;
+  if (!data.length) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">固定メニューはまだ登録されていません。管理画面から追加できます。</p>';
+    return;
+  }
+  grid.innerHTML = '<div class="fixed-cards">' + data.map(function(item) {
+    const thumb = item.photo
+      ? '<img class="menu-thumb" src="' + item.photo + '" alt="' + item.name + '" style="border-radius:8px;margin-bottom:8px;">'
+      : '<div class="menu-thumb-placeholder">🍽️</div>';
+    return '<div class="fixed-card">' + thumb +
+      '<div class="fixed-card-body">' +
+      '<div class="fixed-card-name">' + (item.name || '—') + '</div>' +
+      (item.desc ? '<div class="fixed-card-desc">' + item.desc + '</div>' : '') +
+      '<div class="menu-price">' + (item.price ? '¥' + item.price : '') + '</div>' +
+      '</div></div>';
+  }).join('') + '</div>';
+}
+
+// 管理画面の固定メニューリスト表示
+function renderFixedAdmin() {
+  const list = document.getElementById('fixed-admin-list');
+  if (!list) return;
+  const data = loadFixed();
+  if (!data.length) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:8px 0;">項目がありません。下の「＋ 項目を追加」から追加してください。</p>';
+    return;
+  }
+  list.innerHTML = data.map(function(item, i) {
+    const thumbHtml = item.photo
+      ? `<img src="${item.photo}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="triggerFixedPhoto(${i})">`
+      : `<div onclick="triggerFixedPhoto(${i})" style="width:48px;height:48px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;">📷</div>`;
+    const deletePhotoBtn = item.photo
+      ? `<button onclick="clearFixedItemPhoto(${i})" style="font-size:10px;color:#c00;background:none;border:none;cursor:pointer;display:block;margin-top:2px;">削除</button>`
+      : '';
+    return `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        ${thumbHtml}
+        ${deletePhotoBtn}
+        <input type="file" id="fi-photo-${i}" accept="image/*" style="display:none;" onchange="handleFixedItemPhoto(this,${i})">
+      </div>
+      <input type="text" id="fi-name-${i}" value="${item.name||''}" placeholder="料理名" style="flex:2;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);">
+      <input type="number" id="fi-price-${i}" value="${item.price||''}" placeholder="値段" min="0" style="width:90px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);">
+      <input type="text" id="fi-desc-${i}" value="${item.desc||''}" placeholder="説明（任意）" style="flex:2;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);">
+      <button onclick="deleteFixedItem(${i})" style="background:none;border:none;cursor:pointer;font-size:18px;color:#c00;padding:4px;">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function triggerFixedPhoto(i) {
+  const el = document.getElementById('fi-photo-' + i);
+  if (el) el.click();
+}
+
+function handleFixedItemPhoto(input, i) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = loadFixed();
+    // 現在の入力値を保持しながら写真だけ更新
+    data[i].photo = e.target.result;
+    data[i].name  = document.getElementById('fi-name-'  + i).value;
+    data[i].price = parseInt(document.getElementById('fi-price-' + i).value) || 0;
+    data[i].desc  = document.getElementById('fi-desc-'  + i).value;
+    saveFixed(data);
+    renderFixedAdmin();
+    renderFixed();
+    showToast('📷 写真を保存しました');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearFixedItemPhoto(i) {
+  const data = loadFixed();
+  data[i].name  = document.getElementById('fi-name-'  + i).value;
+  data[i].price = parseInt(document.getElementById('fi-price-' + i).value) || 0;
+  data[i].desc  = document.getElementById('fi-desc-'  + i).value;
+  data[i].photo = '';
+  saveFixed(data);
+  renderFixedAdmin();
+  renderFixed();
+}
+
+function addFixedItem() {
+  const data = loadFixed();
+  data.push({ name: '', price: 0, photo: '', desc: '' });
+  saveFixed(data);
+  renderFixedAdmin();
+}
+
+function deleteFixedItem(i) {
+  const data = loadFixed();
+  data.splice(i, 1);
+  saveFixed(data);
+  renderFixedAdmin();
+  renderFixed();
+}
+
+function saveFixedItems() {
+  const data = loadFixed();
+  const newData = data.map(function(item, i) {
+    const nameEl  = document.getElementById('fi-name-'  + i);
+    const priceEl = document.getElementById('fi-price-' + i);
+    const descEl  = document.getElementById('fi-desc-'  + i);
+    return {
+      name:  nameEl  ? nameEl.value  : '',
+      price: priceEl ? (parseInt(priceEl.value) || 0) : 0,
+      desc:  descEl  ? descEl.value  : '',
+      photo: item.photo || ''
+    };
+  });
+  saveFixed(newData);
+  renderFixed();
+  renderFixedAdmin();
+  showToast('✅ 固定メニューを保存しました');
+}
+
+// ============================================================
+// トースト通知
+// ============================================================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 2500);
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+updateHeaderLabel();
+renderView();
+</script>
+</body>
+</html>
