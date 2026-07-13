@@ -220,16 +220,24 @@
       padding: 8px 10px 10px;
       flex: 1;
     }
+    .menu-card-footer {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+    }
     .menu-name {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
       color: var(--ink);
       line-height: 1.4;
+      flex: 1;
     }
     .menu-price {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #aaa;
+      white-space: nowrap;
     }
 
     /* iPadランドスケープ最適化 */
@@ -955,11 +963,11 @@ const SLOTS = [
 // デフォルトメニュー
 // ============================================================
 const DEFAULT_MENU = [
-  { a1:{name:'唐揚げ定食',price:450,photo:''}, a2:{name:'鮭塩焼き定食',price:430,photo:''}, b1:{name:'野菜炒め定食',price:400,photo:''}, b2:{name:'麻婆豆腐定食',price:420,photo:''}, b3:{name:'カレーライス',price:380,photo:''} },
-  { a1:{name:'豚生姜焼き定食',price:480,photo:''}, a2:{name:'チキンソテー定食',price:460,photo:''}, b1:{name:'親子丼',price:410,photo:''}, b2:{name:'うどん定食',price:380,photo:''}, b3:{name:'五目炒飯',price:390,photo:''} },
-  { a1:{name:'ハンバーグ定食',price:500,photo:''}, a2:{name:'さばみそ定食',price:450,photo:''}, b1:{name:'冷やし中華',price:400,photo:''}, b2:{name:'天丼',price:440,photo:''}, b3:{name:'豆腐チゲ定食',price:420,photo:''} },
-  { a1:{name:'エビフライ定食',price:490,photo:''}, a2:{name:'ミートソースパスタ',price:460,photo:''}, b1:{name:'卵とじ丼',price:380,photo:''}, b2:{name:'ラーメン定食',price:430,photo:''}, b3:{name:'キムチ炒め定食',price:410,photo:''} },
-  { a1:{name:'カツカレー',price:520,photo:''}, a2:{name:'ビビンバ',price:470,photo:''}, b1:{name:'月見そば',price:360,photo:''}, b2:{name:'鶏つくね定食',price:420,photo:''}, b3:{name:'回鍋肉定食',price:400,photo:''} },
+  { a1:{name:'唐揚げ定食',price:450,large:550,photo:''}, a2:{name:'鮭塩焼き定食',price:430,large:530,photo:''}, b1:{name:'野菜炒め定食',price:400,large:500,photo:''}, b2:{name:'麻婆豆腐定食',price:420,large:520,photo:''}, b3:{name:'カレーライス',price:380,large:480,photo:''} },
+  { a1:{name:'豚生姜焼き定食',price:480,large:580,photo:''}, a2:{name:'チキンソテー定食',price:460,large:560,photo:''}, b1:{name:'親子丼',price:410,large:510,photo:''}, b2:{name:'うどん定食',price:380,large:480,photo:''}, b3:{name:'五目炒飯',price:390,large:490,photo:''} },
+  { a1:{name:'ハンバーグ定食',price:500,large:600,photo:''}, a2:{name:'さばみそ定食',price:450,large:550,photo:''}, b1:{name:'冷やし中華',price:400,large:500,photo:''}, b2:{name:'天丼',price:440,large:540,photo:''}, b3:{name:'豆腐チゲ定食',price:420,large:520,photo:''} },
+  { a1:{name:'エビフライ定食',price:490,large:590,photo:''}, a2:{name:'ミートソースパスタ',price:460,large:560,photo:''}, b1:{name:'卵とじ丼',price:380,large:480,photo:''}, b2:{name:'ラーメン定食',price:430,large:530,photo:''}, b3:{name:'キムチ炒め定食',price:410,large:510,photo:''} },
+  { a1:{name:'カツカレー',price:520,large:620,photo:''}, a2:{name:'ビビンバ',price:470,large:570,photo:''}, b1:{name:'月見そば',price:360,large:460,photo:''}, b2:{name:'鶏つくね定食',price:420,large:520,photo:''}, b3:{name:'回鍋肉定食',price:400,large:500,photo:''} },
 ];
 
 // ============================================================
@@ -1099,8 +1107,10 @@ function renderView() {
           <div class="menu-card-label ${labelClassMap[slot.key]}">${slot.label}</div>
           ${thumb}
           <div class="menu-card-body">
-            <div class="menu-name">${item.name || '—'}</div>
-            <div class="menu-price">${item.price ? '¥' + item.price : ''}</div>
+            <div class="menu-card-footer">
+              <div class="menu-name">${item.name || '—'}</div>
+              <div class="menu-price">${item.price ? '¥' + item.price : ''}${item.large ? ' / 大盛¥' + item.large : ''}</div>
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -1136,6 +1146,7 @@ function renderAdmin() {
           <td><span class="badge ${slot.badgeClass}">${slot.label}</span></td>
           <td><input type="text" id="name-${i}-${slot.key}" value="${item.name}" placeholder="料理名を入力"></td>
           <td><input type="number" id="price-${i}-${slot.key}" value="${item.price||''}" min="0" placeholder="円"></td>
+          <td><input type="number" id="large-${i}-${slot.key}" value="${item.large||''}" min="0" placeholder="円"></td>
           <td>
             <div class="photo-upload-cell">
               ${thumb}
@@ -1161,6 +1172,7 @@ function renderAdmin() {
               <th style="width:90px">定食</th>
               <th>料理名</th>
               <th style="width:100px">値段（円）</th>
+              <th style="width:100px">大盛（円）</th>
               <th style="width:160px">写真</th>
             </tr>
           </thead>
@@ -1209,9 +1221,11 @@ function saveAll() {
       const nameEl = document.getElementById(`name-${i}-${slot.key}`);
       const priceEl = document.getElementById(`price-${i}-${slot.key}`);
       const existing = loadMenu()[i][slot.key] || {};
+      const largeEl = document.getElementById(`large-${i}-${slot.key}`);
       dayData[slot.key] = {
         name: nameEl ? nameEl.value : '',
         price: priceEl ? (parseInt(priceEl.value)||0) : 0,
+        large: largeEl ? (parseInt(largeEl.value)||0) : 0,
         photo: existing.photo || ''
       };
     });
@@ -1376,9 +1390,11 @@ function renderFixed() {
       const thumb = '<div class="menu-thumb-wrap">' + thumbInner + '</div>';
       return '<div class="fixed-card">' + thumb +
         '<div class="fixed-card-body">' +
-        '<div class="fixed-card-name">' + (item.name || '—') + '</div>' +
         (item.desc ? '<div class="fixed-card-desc">' + item.desc + '</div>' : '') +
+        '<div class="menu-card-footer">' +
+        '<div class="menu-name">' + (item.name || '—') + '</div>' +
         '<div class="menu-price">' + (item.price ? '¥' + item.price : '') + '</div>' +
+        '</div>' +
         '</div></div>';
     }).join('');
     return '<div class="fixed-row">' + cards + '</div>';
