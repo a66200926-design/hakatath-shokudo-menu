@@ -246,26 +246,54 @@
       .day-label { flex: 0 0 72px; }
     }
 
-    /* タブレット縦向き（1024px以下） */
-    @media (max-width: 1024px) {
-      #view-page .container { padding: 8px; max-width: 100%; }
-
-      /* 料理名・値段を縦並びに */
+    /* iPad第7世代 横向き（1024px）：5列・料理名縦並び */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      #view-page .container { padding: 10px 16px; max-width: 100%; }
+      .day-label { flex: 0 0 60px; }
+      .day-label .day-name { font-size: 13px; }
+      .day-label .day-date { font-size: 11px; }
       .menu-card-footer {
         flex-direction: column;
         gap: 2px;
       }
       .menu-name { font-size: 12px; }
       .menu-price { font-size: 11px; white-space: normal; }
+      .menu-card-label { font-size: 10px; padding: 4px 0; }
     }
 
-    /* スマホ（600px以下）：曜日を横帯にしてカード2列 */
-    @media (max-width: 600px) {
-      .day-row {
-        flex-direction: column;
-        gap: 6px;
-        margin-bottom: 16px;
+    /* iPad第7世代 縦向き（768px）：3列表示 */
+    @media (max-width: 768px) and (min-width: 601px) {
+      #view-page .container { padding: 8px 12px; max-width: 100%; }
+      .day-row { flex-direction: column; gap: 6px; margin-bottom: 14px; }
+      .day-label {
+        flex: none;
+        flex-direction: row;
+        border-radius: 8px;
+        padding: 8px 14px;
+        justify-content: flex-start;
+        gap: 10px;
+        width: 100%;
       }
+      .day-label .day-name { font-size: 14px; }
+      .day-label .day-date { font-size: 12px; margin-top: 0; }
+      .day-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        overflow-x: visible;
+        flex: none;
+        width: 100%;
+      }
+      .menu-card-footer { flex-direction: column; gap: 2px; }
+      .menu-name { font-size: 13px; }
+      .menu-price { font-size: 12px; white-space: normal; }
+      .fixed-row { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* スマホ（600px以下）：2列表示 */
+    @media (max-width: 600px) {
+      #view-page .container { padding: 8px; max-width: 100%; }
+      .day-row { flex-direction: column; gap: 6px; margin-bottom: 14px; }
       .day-label {
         flex: none;
         flex-direction: row;
@@ -285,6 +313,9 @@
         flex: none;
         width: 100%;
       }
+      .menu-card-footer { flex-direction: column; gap: 2px; }
+      .menu-name { font-size: 12px; }
+      .menu-price { font-size: 11px; white-space: normal; }
       .fixed-row { grid-template-columns: repeat(2, 1fr); }
     }
 
