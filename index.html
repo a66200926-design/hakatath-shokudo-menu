@@ -246,11 +246,21 @@
       .day-label { flex: 0 0 72px; }
     }
 
-    /* タブレット・スマホ共通 */
-    @media (max-width: 768px) {
+    /* タブレット縦向き（1024px以下） */
+    @media (max-width: 1024px) {
       #view-page .container { padding: 8px; max-width: 100%; }
 
-      /* 曜日ラベルを横帯に */
+      /* 料理名・値段を縦並びに */
+      .menu-card-footer {
+        flex-direction: column;
+        gap: 2px;
+      }
+      .menu-name { font-size: 12px; }
+      .menu-price { font-size: 11px; white-space: normal; }
+    }
+
+    /* スマホ（600px以下）：曜日を横帯にしてカード2列 */
+    @media (max-width: 600px) {
       .day-row {
         flex-direction: column;
         gap: 6px;
@@ -267,8 +277,6 @@
       }
       .day-label .day-name { font-size: 14px; }
       .day-label .day-date { font-size: 12px; margin-top: 0; }
-
-      /* カードを2列グリッドに */
       .day-cards {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -277,16 +285,6 @@
         flex: none;
         width: 100%;
       }
-
-      /* 料理名・値段を縦並びに */
-      .menu-card-footer {
-        flex-direction: column;
-        gap: 2px;
-      }
-      .menu-name { font-size: 13px; }
-      .menu-price { font-size: 12px; white-space: normal; }
-
-      /* 固定メニュー2列 */
       .fixed-row { grid-template-columns: repeat(2, 1fr); }
     }
 
