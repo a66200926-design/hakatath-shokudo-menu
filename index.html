@@ -245,10 +245,49 @@
       #view-page .container { max-width: 100%; padding: 16px 24px; }
       .day-label { flex: 0 0 72px; }
     }
-    @media (max-width: 600px) {
-      .day-label { flex: 0 0 52px; }
-      .day-label .day-name { font-size: 12px; }
-      .menu-name { font-size: 12px; }
+
+    /* タブレット・スマホ共通 */
+    @media (max-width: 768px) {
+      #view-page .container { padding: 8px; max-width: 100%; }
+
+      /* 曜日ラベルを横帯に */
+      .day-row {
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .day-label {
+        flex: none;
+        flex-direction: row;
+        border-radius: 8px;
+        padding: 8px 14px;
+        justify-content: flex-start;
+        gap: 10px;
+        width: 100%;
+      }
+      .day-label .day-name { font-size: 14px; }
+      .day-label .day-date { font-size: 12px; margin-top: 0; }
+
+      /* カードを2列グリッドに */
+      .day-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        overflow-x: visible;
+        flex: none;
+        width: 100%;
+      }
+
+      /* 料理名・値段を縦並びに */
+      .menu-card-footer {
+        flex-direction: column;
+        gap: 2px;
+      }
+      .menu-name { font-size: 13px; }
+      .menu-price { font-size: 12px; white-space: normal; }
+
+      /* 固定メニュー2列 */
+      .fixed-row { grid-template-columns: repeat(2, 1fr); }
     }
 
     /* ===== ADMIN ===== */
